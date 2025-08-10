@@ -98,12 +98,28 @@ class ICONBAR_OT_add_from_context(Operator):
             new_item.icon = 'PLUGIN' # Default icon for operators
             report_name = new_item.name
         elif prop:
-            ptr = context.button_pointer
+            full_path = self.path_from_button(prop_path=True)
+            data_path = ""
+            prop_name = ""
+
+            # Heuristic to split the path into data_path and prop_name
+            # This works for most simple cases like 'object.location'
+            # but might not cover all edge cases like array properties perfectly.
+            parts = full_path.rsplit(".", 1)
+            if len(parts) == 2:
+                data_path, prop_name = parts
+            else:
+                # This occurs for properties that don't have a preceding path,
+                # meaning they are relative to the top-level context.
+                data_path = ""
+                prop_name = full_path
+
             new_item.is_operator = False
-            new_item.data_path = ptr.path_from_id()
-            new_item.prop_name = prop.identifier
-            new_item.name = prop.name
+            new_item.data_path = data_path
+            new_item.prop_name = prop_name
+            new_item.name = prop.name # Keep original name for display
             report_name = new_item.name
+
             icon_id = getattr(prop, 'icon', 0)
             if icon_id != 0:
                 try:
@@ -144,7 +160,7 @@ class VIEW3D_PT_icon_toolbar(Panel):
                     resolved_obj = context.path_resolve(item.data_path)
                     if resolved_obj: flow.prop(resolved_obj, item.prop_name, text="", icon=item.icon)
                     else: flow.label(text="", icon=item.icon).active = False
-                except (ReferenceError, TypeError, AttributeError): flow.label(text="", icon=item.icon).active = False
+                except (ReferenceError, TypeError, AttributeError, ValueError): flow.label(text="", icon=item.icon).active = False
 
 def menu_func(self, context):
     self.layout.separator(); self.layout.operator(ICONBAR_OT_add_from_context.bl_idname)
