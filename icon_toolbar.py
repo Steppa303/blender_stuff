@@ -77,7 +77,10 @@ class ICONBAR_OT_add_from_context(Operator):
 
     @classmethod
     def poll(cls, context):
-        return getattr(context, "button_operator", None) or getattr(context, "button_prop", None)
+        op = getattr(context, "button_operator", None)
+        prop = getattr(context, "button_prop", None)
+        ptr = getattr(context, "button_pointer", None)
+        return op or (prop and ptr)
 
     # --- UPDATED --- No more dialog! All logic is in execute() for instant adding.
     def execute(self, context):
@@ -95,12 +98,20 @@ class ICONBAR_OT_add_from_context(Operator):
             new_item.icon = 'PLUGIN' # Default icon for operators
             report_name = new_item.name
         elif prop:
+            ptr = context.button_pointer
             new_item.is_operator = False
-            new_item.data_path = prop.data.path_from_id()
+            new_item.data_path = ptr.path_from_id()
             new_item.prop_name = prop.property
             new_item.name = prop.name
-            new_item.icon = 'DOT' # Default icon for properties
             report_name = new_item.name
+            icon_id = getattr(prop, 'icon', 0)
+            if icon_id != 0:
+                try:
+                    new_item.icon = bpy.app.icons.from_int(icon_id).name
+                except:
+                    new_item.icon = 'DOT' # Fallback
+            else:
+                new_item.icon = 'DOT'
         else:
             # Should not happen due to poll(), but as a fallback, remove the empty item
             prefs.items.remove(len(prefs.items)-1)
@@ -133,7 +144,7 @@ class VIEW3D_PT_icon_toolbar(Panel):
                     resolved_obj = context.path_resolve(item.data_path)
                     if resolved_obj: flow.prop(resolved_obj, item.prop_name, text="", icon=item.icon)
                     else: flow.label(text="", icon=item.icon).active = False
-                except (ReferenceError, TypeError): flow.label(text="", icon=item.icon).active = False
+                except (ReferenceError, TypeError, AttributeError): flow.label(text="", icon=item.icon).active = False
 
 def menu_func(self, context):
     self.layout.separator(); self.layout.operator(ICONBAR_OT_add_from_context.bl_idname)
