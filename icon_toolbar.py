@@ -98,28 +98,12 @@ class ICONBAR_OT_add_from_context(Operator):
             new_item.icon = 'PLUGIN' # Default icon for operators
             report_name = new_item.name
         elif prop:
-            full_path = self.path_from_button(prop_path=True)
-            data_path = ""
-            prop_name = ""
-
-            # Heuristic to split the path into data_path and prop_name
-            # This works for most simple cases like 'object.location'
-            # but might not cover all edge cases like array properties perfectly.
-            parts = full_path.rsplit(".", 1)
-            if len(parts) == 2:
-                data_path, prop_name = parts
-            else:
-                # This occurs for properties that don't have a preceding path,
-                # meaning they are relative to the top-level context.
-                data_path = ""
-                prop_name = full_path
-
+            ptr = context.button_pointer
             new_item.is_operator = False
-            new_item.data_path = data_path
-            new_item.prop_name = prop_name
-            new_item.name = prop.name # Keep original name for display
+            new_item.data_path = ptr.path_from_id()
+            new_item.prop_name = prop.identifier
+            new_item.name = prop.name
             report_name = new_item.name
-
             icon_id = getattr(prop, 'icon', 0)
             if icon_id != 0:
                 try:
