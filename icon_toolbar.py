@@ -101,7 +101,7 @@ class ICONBAR_OT_add_from_context(Operator):
             ptr = context.button_pointer
             new_item.is_operator = False
             new_item.data_path = ptr.path_from_id()
-            new_item.prop_name = prop.property
+            new_item.prop_name = prop.identifier
             new_item.name = prop.name
             report_name = new_item.name
             icon_id = getattr(prop, 'icon', 0)
