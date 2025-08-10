@@ -144,7 +144,10 @@ class VIEW3D_PT_icon_toolbar(Panel):
                     resolved_obj = context.path_resolve(item.data_path)
                     if resolved_obj: flow.prop(resolved_obj, item.prop_name, text="", icon=item.icon)
                     else: flow.label(text="", icon=item.icon).active = False
-                except (ReferenceError, TypeError, AttributeError, ValueError): flow.label(text="", icon=item.icon).active = False
+                except (ReferenceError, TypeError, AttributeError, ValueError):
+                    label = flow.label(text="", icon=item.icon)
+                    if label:
+                        label.active = False
 
 def menu_func(self, context):
     self.layout.separator(); self.layout.operator(ICONBAR_OT_add_from_context.bl_idname)
